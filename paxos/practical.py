@@ -6,6 +6,7 @@ from paxos import essential
 
 from paxos.essential import ProposalID
 
+import logging
 
 class Messenger (essential.Messenger):
     
@@ -82,7 +83,7 @@ class Proposer (essential.Proposer):
         if increment_proposal_number:
             self.leader        = False
             self.promises_rcvd = set()
-            self.proposal_id   = (self.next_proposal_number, self.proposer_uid)
+            self.proposal_id   = ProposalID(self.next_proposal_number, self.proposer_uid)
         
             self.next_proposal_number += 1
 
@@ -197,11 +198,13 @@ class Acceptor (essential.Acceptor):
         '''
         Called when a Prepare message is received from the network
         '''
+        logging.debug("Acceptor %r received proposal %r from %r", self.acceptor_uid, proposal_id.number, from_uid)
+
         if proposal_id == self.promised_id:
             # Duplicate prepare message. No change in state is necessary so the response
             # may be sent immediately
             if self.active:
-                self.messenger.send_promise(from_uid, proposal_id, self.accepted_id, self.accepted_value)
+                self.messenger.send_promise(from_uid, self.acceptor_uid, proposal_id, self.accepted_id, self.accepted_value)
         
         elif proposal_id > self.promised_id:
             if self.pending_promise is None:
@@ -222,7 +225,7 @@ class Acceptor (essential.Acceptor):
             # Duplicate accepted proposal. No change in state is necessary so the response
             # may be sent immediately
             if self.active:
-                self.messenger.send_accepted(proposal_id, value)
+                self.messenger.send_accepted(proposal_id, self.acceptor_uid, value)
             
         elif proposal_id >= self.promised_id:
             if self.pending_accepted is None:
@@ -248,12 +251,14 @@ class Acceptor (essential.Acceptor):
             
             if self.pending_promise:
                 self.messenger.send_promise(self.pending_promise,
+                                            self.acceptor_uid,
                                             self.promised_id,
                                             self.accepted_id,
                                             self.accepted_value)
                 
             if self.pending_accepted:
                 self.messenger.send_accepted(self.accepted_id,
+                                             self.acceptor_uid,
                                              self.accepted_value)
                 
         self.pending_promise  = None

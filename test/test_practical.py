@@ -192,14 +192,14 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
 
     def test_recv_prepare_nack(self):
         self.a.recv_prepare( 'A', PID(2,'A') )
-        self.am('promise', 'A', PID(2,'A'), None, None)
+        self.am('promise', 'A', None, PID(2,'A'), None, None)
         self.a.recv_prepare( 'A', PID(1,'A') )
         self.am('prepare_nack', 'A', PID(1,'A'), PID(2,'A'))
 
 
     def test_recv_prepare_nack_not_active(self):
         self.a.recv_prepare( 'A', PID(2,'A') )
-        self.am('promise', 'A', PID(2,'A'), None, None)
+        self.am('promise', 'A', None, PID(2,'A'), None, None)
         self.a.active = False
         self.a.recv_prepare( 'A', PID(1,'A') )
         self.an()
@@ -212,7 +212,7 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
 
     def test_recv_accept_request_less_than_promised(self):
         self.a.recv_prepare( 'A', PID(5,'A') )
-        self.am('promise', 'A', PID(5,'A'), None, None)
+        self.am('promise', 'A', None, PID(5,'A'), None, None)
         self.a.active = False
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.ae( self.a.accepted_value, None )
@@ -232,7 +232,7 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
         
     def test_recv_prepare_duplicate_not_active(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.active = False
         self.a.recv_prepare( 'A', PID(1,'A') )
         self.an()
@@ -240,14 +240,14 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
 
     def test_recv_accept_request_duplicate(self):
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
-        self.am('accepted', PID(1,'A'), 'foo')
+        self.am('accepted', PID(1,'A'), None, 'foo')
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
-        self.am('accepted', PID(1,'A'), 'foo')
+        self.am('accepted', PID(1,'A'), None, 'foo')
 
         
     def test_recv_accept_request_duplicate_not_active(self):
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
-        self.am('accepted', PID(1,'A'), 'foo')
+        self.am('accepted', PID(1,'A'), None, 'foo')
         self.a.active = False
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.an()
@@ -261,7 +261,7 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
         
     def test_recv_accept_request_promised_not_active(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.active = False
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.an()
@@ -271,19 +271,19 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
 
     def test_durable_recv_prepare_duplicate(self):
         self.a.recv_prepare( 'A', PID(2,'A') )
-        self.am('promise', 'A', PID(2,'A'), None, None)
+        self.am('promise', 'A', None, PID(2,'A'), None, None)
         self.recover()
         self.a.recv_prepare( 'A', PID(2,'A') )
-        self.am('promise', 'A', PID(2,'A'), None, None)
+        self.am('promise', 'A', None, PID(2,'A'), None, None)
 
         
     def test_durable_recv_prepare_override(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.clear_msgs()
         self.a.recv_prepare( 'B', PID(2,'B') )
-        self.am('promise', 'B', PID(2,'B'), PID(1,'A'), 'foo')
+        self.am('promise', 'B', None, PID(2,'B'), PID(1,'A'), 'foo')
 
 
     def test_durable_ignore_prepare_override_until_persisted(self):
@@ -293,40 +293,40 @@ class PracticalAcceptorTests (test_essential.EssentialAcceptorTests):
         self.a.recv_prepare( 'B', PID(2,'B') )
         self.an()
         self.a.persisted()
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
 
 
     def test_durable_recv_accept_request_promised(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.recover()
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
-        self.am('accepted', PID(1,'A'), 'foo')
+        self.am('accepted', PID(1,'A'), None, 'foo')
 
         
     def test_durable_recv_accept_request_greater_than_promised(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.recover()
         self.a.recv_accept_request('A', PID(5,'A'), 'foo')
-        self.am('accepted', PID(5,'A'), 'foo')
+        self.am('accepted', PID(5,'A'), None, 'foo')
 
 
     def test_durable_ignore_new_accept_request_until_persisted(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.auto_save = False
         self.a.recv_accept_request('A', PID(5,'A'), 'foo')
         self.an()
         self.a.recv_accept_request('A', PID(6,'A'), 'foo')
         self.an()
         self.a.persisted()
-        self.am('accepted', PID(5,'A'), 'foo')
+        self.am('accepted', PID(5,'A'), None, 'foo')
 
 
     def test_durable_recv_accept_request_less_than_promised(self):
         self.a.recv_prepare( 'A', PID(5,'A') )
-        self.am('promise', 'A', PID(5,'A'), None, None)
+        self.am('promise', 'A', None, PID(5,'A'), None, None)
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.am('accept_nack', 'A', PID(1,'A'), PID(5,'A'))
         

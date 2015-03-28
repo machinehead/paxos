@@ -28,7 +28,7 @@ class Messenger (object):
         Broadcasts a Prepare message to all Acceptors
         '''
 
-    def send_promise(self, proposer_uid, proposal_id, previous_id, accepted_value):
+    def send_promise(self, proposer_uid, acceptor_uid, proposal_id, previous_id, accepted_value):
         '''
         Sends a Promise message to the specified Proposer
         '''
@@ -38,7 +38,7 @@ class Messenger (object):
         Broadcasts an Accept! message to all Acceptors
         '''
 
-    def send_accepted(self, proposal_id, accepted_value):
+    def send_accepted(self, proposal_id, acceptor_uid, accepted_value):
         '''
         Broadcasts an Accepted message to all Learners
         '''
@@ -118,6 +118,7 @@ class Acceptor (object):
     accepted_id    = None
     accepted_value = None
 
+    acceptor_uid   = None
 
     def recv_prepare(self, from_uid, proposal_id):
         '''
@@ -125,11 +126,11 @@ class Acceptor (object):
         '''
         if proposal_id == self.promised_id:
             # Duplicate prepare message
-            self.messenger.send_promise(from_uid, proposal_id, self.accepted_id, self.accepted_value)
+            self.messenger.send_promise(from_uid, self.acceptor_uid, proposal_id, self.accepted_id, self.accepted_value)
         
         elif proposal_id > self.promised_id:
             self.promised_id = proposal_id
-            self.messenger.send_promise(from_uid, proposal_id, self.accepted_id, self.accepted_value)
+            self.messenger.send_promise(from_uid, self.acceptor_uid, proposal_id, self.accepted_id, self.accepted_value)
 
                     
     def recv_accept_request(self, from_uid, proposal_id, value):
@@ -140,7 +141,7 @@ class Acceptor (object):
             self.promised_id     = proposal_id
             self.accepted_id     = proposal_id
             self.accepted_value  = value
-            self.messenger.send_accepted(proposal_id, self.accepted_value)
+            self.messenger.send_accepted(proposal_id, self.acceptor_uid, self.accepted_value)
 
 
     

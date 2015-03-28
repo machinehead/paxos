@@ -28,14 +28,14 @@ class EssentialMessenger (object):
     def send_prepare(self, proposal_id):
         self._append('prepare', proposal_id)
 
-    def send_promise(self, to_uid, proposal_id, proposal_value, accepted_value):
-        self._append('promise', to_uid, proposal_id, proposal_value, accepted_value)
+    def send_promise(self, to_uid, acceptor_uid, proposal_id, proposal_value, accepted_value):
+        self._append('promise', to_uid, acceptor_uid, proposal_id, proposal_value, accepted_value)
         
     def send_accept(self, proposal_id, proposal_value):
         self._append('accept', proposal_id, proposal_value)
 
-    def send_accepted(self, proposal_id, accepted_value):
-        self._append('accepted', proposal_id, accepted_value)
+    def send_accepted(self, proposal_id, acceptor_uid, accepted_value):
+        self._append('accepted', proposal_id, acceptor_uid, accepted_value)
 
     def on_resolution(self, proposal_id, value):
         self.resolution = (proposal_id, value)
@@ -212,47 +212,47 @@ class EssentialAcceptorTests (object):
         self.ae( self.a.accepted_value , None)
         self.ae( self.a.accepted_id    , None)
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
 
         
     def test_recv_prepare_duplicate(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
 
         
     def test_recv_prepare_override(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.clear_msgs()
         self.a.recv_prepare( 'B', PID(2,'B') )
-        self.am('promise', 'B', PID(2,'B'), PID(1,'A'), 'foo')
+        self.am('promise', 'B', None, PID(2,'B'), PID(1,'A'), 'foo')
 
 
     def test_recv_accept_request_initial(self):
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
-        self.am('accepted', PID(1,'A'), 'foo')
+        self.am('accepted', PID(1,'A'), None, 'foo')
 
         
     def test_recv_accept_request_promised(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
-        self.am('accepted', PID(1,'A'), 'foo')
+        self.am('accepted', PID(1,'A'), None, 'foo')
 
         
     def test_recv_accept_request_greater_than_promised(self):
         self.a.recv_prepare( 'A', PID(1,'A') )
-        self.am('promise', 'A', PID(1,'A'), None, None)
+        self.am('promise', 'A', None, PID(1,'A'), None, None)
         self.a.recv_accept_request('A', PID(5,'A'), 'foo')
-        self.am('accepted', PID(5,'A'), 'foo')
+        self.am('accepted', PID(5,'A'), None, 'foo')
 
 
     def test_recv_accept_request_less_than_promised(self):
         self.a.recv_prepare( 'A', PID(5,'A') )
-        self.am('promise', 'A', PID(5,'A'), None, None)
+        self.am('promise', 'A', None, PID(5,'A'), None, None)
         self.a.recv_accept_request('A', PID(1,'A'), 'foo')
         self.ae( self.a.accepted_value, None )
         self.ae( self.a.accepted_id,    None )
